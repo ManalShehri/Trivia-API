@@ -76,24 +76,32 @@ def create_app(test_config=None):
 
   @app.route('/questions')
   def get_questions():
-    # get all questions 
-    selection = Question.query.order_by(Question.id).all()
-    # get the total num of questions 
-    totalQuestions = len(selection)
-    # get current questions in a page (10q)
-    currentQuestions = paginate_questions(request, selection)
-    # get all categories
-    categories = Category.query.all()
-    categoriesDict = {}
-    for category in categories:
-      categoriesDict[category.id] = category.type
-    
-    return jsonify({
-      'success': True,
-      'questions': currentQuestions,
-      'total_questions': totalQuestions,
-      'categories': categoriesDict
-    })
+    try:
+      # get all questions 
+      selection = Question.query.order_by(Question.id).all()
+      # get the total num of questions 
+      totalQuestions = len(selection)
+      # get current questions in a page (10q)
+      currentQuestions = paginate_questions(request, selection)
+     
+      # if the page number is not found 
+      if (len(currentQuestions) == 0):
+        abort(404)
+
+      # get all categories
+      categories = Category.query.all()
+      categoriesDict = {}
+      for category in categories:
+        categoriesDict[category.id] = category.type
+      
+      return jsonify({
+        'success': True,
+        'questions': currentQuestions,
+        'total_questions': totalQuestions,
+        'categories': categoriesDict
+      })
+    except Exception:
+      abort(400)
 
   '''
   @TODO: 
@@ -102,6 +110,28 @@ def create_app(test_config=None):
   TEST: When you click the trash icon next to a question, the question will be removed.
   This removal will persist in the database and when you refresh the page. 
   '''
+
+  @app.route('/questions/<int:id>', methods=['DELETE'])
+  def delete_question(id):
+    try:
+      question = Question.query.filter_by(id=id).one_or_none()
+      # if the question is not found 
+      if question is None:
+        abort(404)
+
+      question.delete()
+      # send back the current books, to update front end  
+      selection = Question.query.order_by(Question.id).all()
+      currentQuestions = paginate_questions(request, selection)
+
+      return jsonify({
+        'success': True,
+        'questions': currentQuestions,
+        'total_questions': len(selection)
+      })
+
+    except Exception:
+      abort(422)
 
   '''
   @TODO: 
