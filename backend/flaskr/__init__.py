@@ -35,6 +35,21 @@ def create_app(test_config=None):
   for all available categories.
   '''
 
+# categories 
+  @app.route("/categories")
+  def get_all_categories():
+    # get all categories
+    categories = Category.query.all()
+    # categories dict for holding the retrives categories
+    categoriesDict = {}
+
+    # adding all categories to the dict
+    for category in categories:
+      categoriesDict[category.id] = category.type
+
+    return jsonify({
+      'categories': categoriesDict
+    })
 
   '''
   @TODO: 
