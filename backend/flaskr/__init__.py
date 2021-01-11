@@ -195,6 +195,27 @@ def create_app(test_config=None):
   category to be shown. 
   '''
 
+  @app.route("/categories/<int:id>/questions")
+  def questions_in_category(id):
+    # retrive the category by given id 
+    try: 
+      category = Category.query.filter_by(id=id).one_or_none()
+      if category:
+        # retrive all questions in a category
+        questionsInCat = Question.query.filter_by(category=str(id)).all()
+        currentQuestions = paginate_questions(request, questionsInCat)
+
+        return jsonify({
+          'success': True,
+          'questions': currentQuestions,
+          'total_questions': len(questionsInCat),
+          'current_category': category.type
+          })
+      # if category not founs
+      else:
+        abort(404)
+    except Exception as e:
+      abort(422)
 
   '''
   @TODO: 
