@@ -228,6 +228,43 @@ def create_app(test_config=None):
   one question at a time is displayed, the user is allowed to answer
   and shown whether they were correct or not. 
   '''
+  @app.route('/quizzes', methods=['POST'])
+  def play_quiz_question():
+    # get the qestion category an the previous question
+    body = request.get_json()
+    quizCategory = body.get('quiz_category')
+    previousQuestion = body.get('previous_questions')
+    
+    # if category chosen
+    if quizCategory: 
+      if (quizCategory['id'] == 0):
+        questions = Question.query.all()
+      else:
+        questions = Question.query.filter_by(category=quizCategory['id']).all()
+
+      def randomQuestion():
+        # choose random index of questions[]
+        randomQuestion = questions[random.randint(0, len(questions)-1)]
+        return randomQuestion
+
+      nextQuestion = randomQuestion()
+      # add boolean var to check if there is still questons 
+      stillQuestions = True
+      while stillQuestions:
+            
+        # if the question is alrady shown to user before 
+        if nextQuestion.id in previousQuestion:
+          nextQuestion = randomQuestion()
+        else:
+          stillQuestions = False
+
+      return jsonify({
+        'success': True,
+        'question': nextQuestion.format(),
+      })
+      
+    else:
+      abort(404)
 
   '''
   @TODO: 
