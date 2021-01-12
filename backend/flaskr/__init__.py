@@ -126,12 +126,12 @@ def create_app(test_config=None):
 
       return jsonify({
         'success': True,
-        'questions': currentQuestions,
-        'total_questions': len(selection)
+        # 'questions': currentQuestions,
+        # 'total_questions': len(selection)
       })
 
     except Exception:
-      abort(422)
+      abort(404)
 
   '''
   @TODO: 
@@ -192,12 +192,15 @@ def create_app(test_config=None):
     search = body.get('searchTerm')
     questions = Question.query.filter(Question.question.ilike('%'+search+'%')).all()
 
-    currentQuestions = paginate_questions(request, questions)
-    return jsonify({
-        'success': True,
-        'questions': currentQuestions,
-        'total_questions': len(questions)
-    })
+    if questions:
+      currentQuestions = paginate_questions(request, questions)
+      return jsonify({
+          'success': True,
+          'questions': currentQuestions,
+          'total_questions': len(questions)
+      })
+    else:
+      abort(404)
 
   '''
   @TODO: 
@@ -211,24 +214,21 @@ def create_app(test_config=None):
   @app.route("/categories/<int:id>/questions")
   def questions_in_category(id):
     # retrive the category by given id 
-    try: 
-      category = Category.query.filter_by(id=id).one_or_none()
-      if category:
-        # retrive all questions in a category
-        questionsInCat = Question.query.filter_by(category=str(id)).all()
-        currentQuestions = paginate_questions(request, questionsInCat)
+    category = Category.query.filter_by(id=id).one_or_none()
+    if category:
+      # retrive all questions in a category
+      questionsInCat = Question.query.filter_by(category=str(id)).all()
+      currentQuestions = paginate_questions(request, questionsInCat)
 
-        return jsonify({
-          'success': True,
-          'questions': currentQuestions,
-          'total_questions': len(questionsInCat),
-          'current_category': category.type
-          })
-      # if category not founs
-      else:
-        abort(404)
-    except Exception as e:
-      abort(422)
+      return jsonify({
+        'success': True,
+        'questions': currentQuestions,
+        'total_questions': len(questionsInCat),
+        'current_category': category.type
+        })
+    # if category not founs
+    else:
+      abort(404)
 
   '''
   @TODO: 
@@ -249,7 +249,7 @@ def create_app(test_config=None):
     previousQuestion = body.get('previous_questions')
     
     # if category chosen
-    if quizCategory: 
+    try: 
       if (quizCategory['id'] == 0):
         questions = Question.query.all()
       else:
@@ -258,7 +258,10 @@ def create_app(test_config=None):
       def randomQuestion():
         # choose random index of questions[]
         randomQuestion = questions[random.randint(0, len(questions)-1)]
-        return randomQuestion
+        if randomQuestion:
+          return randomQuestion
+        else:
+          abort(404)
 
       nextQuestion = randomQuestion()
       # add boolean var to check if there is still questons 
@@ -276,7 +279,7 @@ def create_app(test_config=None):
         'question': nextQuestion.format(),
       })
       
-    else:
+    except:
       abort(404)
 
   '''
