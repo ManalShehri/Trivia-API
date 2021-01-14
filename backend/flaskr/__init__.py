@@ -242,45 +242,34 @@ def create_app(test_config=None):
   and shown whether they were correct or not. 
   '''
   @app.route('/quizzes', methods=['POST'])
-  def play_quiz_question():
+  def quiz():
     # get the qestion category an the previous question
     body = request.get_json()
     quizCategory = body.get('quiz_category')
     previousQuestion = body.get('previous_questions')
     
-    # if category chosen
-    try: 
-      if (quizCategory['id'] == 0):
-        questions = Question.query.all()
-      else:
-        questions = Question.query.filter_by(category=quizCategory['id']).all()
+    if (quizCategory['id'] == 0):
+      questionsQuery = Question.query.all()
+    else:
+      questionsQuery = Question.query.filter_by(category=quizCategory['id']).all()
 
-      def randomQuestion():
-        # choose random index of questions[]
-        randomQuestion = questions[random.randint(0, len(questions)-1)]
-        if randomQuestion:
-          return randomQuestion
-        else:
-          abort(404)
+    randomIndex = random.randint(0, len(questionsQuery)-1)
+    nextQuestion = questionsQuery[randomIndex]
 
-      nextQuestion = randomQuestion()
-      # add boolean var to check if there is still questons 
-      stillQuestions = True
-      while stillQuestions:
-            
-        # if the question is alrady shown to user before 
-        if nextQuestion.id in previousQuestion:
-          nextQuestion = randomQuestion()
-        else:
-          stillQuestions = False
-
+    while nextQuestion.id not in previousQuestion:
+      nextQuestion = questionsQuery[randomIndex]
       return jsonify({
-        'success': True,
-        'question': nextQuestion.format(),
-      })
-      
-    except:
-      abort(404)
+      'success': True,
+      'question': {
+          "answer": nextQuestion.answer, 
+          "category": nextQuestion.category, 
+          "difficulty": nextQuestion.difficulty, 
+          "id": nextQuestion.id, 
+          "question": nextQuestion.question
+        },
+      'previousQuestion': previousQuestion
+    })
+
 
   '''
   @TODO: 
