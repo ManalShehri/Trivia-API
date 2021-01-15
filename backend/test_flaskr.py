@@ -15,7 +15,12 @@ class TriviaTestCase(unittest.TestCase):
         self.app = create_app()
         self.client = self.app.test_client
         self.database_name = "trivia"
-        self.database_path = "postgres://{}:{}@{}/{}".format('manal', '123456m', 'localhost:5432', self.database_name)
+        self.DB_HOST = os.getenv('DB_HOST', 'localhost:5432')
+        self.DB_USER = os.getenv('DB_USER', 'manal')
+        self.DB_PASSWORD = os.getenv('DB_PASSWORD', '123456m')
+        self.DB_NAME = os.getenv('DB_NAME', 'trivia')
+        self.database_path = "postgres://{}:{}@{}/{}".format(
+            self.DB_USER, self.DB_PASSWORD, self.DB_HOST, self.DB_NAME)
         setup_db(self.app, self.database_path)
 
         # binds the app to the current context
@@ -24,7 +29,7 @@ class TriviaTestCase(unittest.TestCase):
             self.db.init_app(self.app)
             # create all tables
             self.db.create_all()
-    
+
     def tearDown(self):
         """Executed after reach test"""
         pass
@@ -69,7 +74,6 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data["success"], True)
 
-
     def test_delete_question_not_found(self):
         res = self.client().delete('/questions/10000')
         data = json.loads(res.data)
@@ -90,7 +94,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data["success"], True)
 
     def test_search(self):
-        search = {'searchTerm': 'What is',}
+        search = {'searchTerm': 'What is', }
         res = self.client().post('/search', json=search)
         data = json.loads(res.data)
         self.assertEqual(res.status_code, 200)
@@ -123,17 +127,17 @@ class TriviaTestCase(unittest.TestCase):
 
     def test_quiz(self):
         quiz = {
-            'previous_questions': [6],
+            'previous_questions': [13],
             'quiz_category': {
                 'type': 'Entertainment',
-                'id': '5'
+                'id': '3'
             }
         }
         res = self.client().post('/quizzes', json=quiz)
         data = json.loads(res.data)
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['success'], True)
-        self.assertEqual(data['question']['category'], '5')
+        self.assertEqual(data['question']['category'], '3')
 
     def test_quiz_not_found_category(self):
         quiz = {
